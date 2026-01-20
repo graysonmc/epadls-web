@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Manager - EPADLS Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1a1a2e;
+            color: white;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .sidebar-header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .sidebar-header span {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 12px 0;
+        }
+        .nav-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .nav-menu li a:hover {
+            background: #2d2d44;
+            color: white;
+        }
+        .nav-menu li a.active {
+            background: #1a73e8;
+            color: white;
+        }
+        .nav-menu li a .icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h2 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Date Selector Card */
+        .date-selector-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .date-selector-card label {
+            font-weight: 500;
+            color: #333;
+        }
+        .date-selector-card input[type="date"] {
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1557b0;
+        }
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+        .btn-success {
+            background: #34a853;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #2d9249;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .stat-icon.overdue {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+        .stat-icon.pending {
+            background: #fef7e0;
+            color: #f9ab00;
+        }
+        .stat-icon.total {
+            background: #e8f0fe;
+            color: #1a73e8;
+        }
+        .stat-info h3 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+        .stat-info p {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Actions Bar */
+        .actions-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .actions-bar .left-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Service Table */
+        .service-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .service-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .service-table th {
+            background: #f8f9fa;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .service-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .service-table tr:hover {
+            background: #f8f9fa;
+        }
+        .service-table tr.selected {
+            background: #e8f0fe;
+        }
+        .service-table tr.overdue {
+            border-left: 4px solid #c5221f;
+        }
+        .service-table tr.today {
+            border-left: 4px solid #f9ab00;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-badge.overdue {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+        .status-badge.today {
+            background: #fef7e0;
+            color: #b06000;
+        }
+        .status-badge.upcoming {
+            background: #e8f0fe;
+            color: #1a73e8;
+        }
+
+        /* Action Dropdown */
+        .action-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: white;
+            cursor: pointer;
+            min-width: 140px;
+        }
+        .action-select:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+
+        /* Date Input in Table */
+        .table-date-input {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            width: 130px;
+        }
+
+        /* Checkbox */
+        .checkbox-cell {
+            width: 40px;
+        }
+        .checkbox-cell input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Print checkbox */
+        .print-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Notes tooltip */
+        .notes-icon {
+            cursor: help;
+            color: #666;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Summary Modal */
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        .summary-label {
+            color: #666;
+        }
+        .summary-value {
+            font-weight: 600;
+            color: #333;
+        }
+        .summary-value.success {
+            color: #34a853;
+        }
+
+        /* Validation Error */
+        .validation-error {
+            background: #fce8e6;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .validation-error h4 {
+            color: #c5221f;
+            margin-bottom: 8px;
+        }
+        .validation-error ul {
+            margin-left: 20px;
+            color: #721c24;
+        }
+        .validation-error li {
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>EPADLS Scheduler</h1>
+                <span>Service Management</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="service-manager.html" class="active"><span class="icon">📋</span> Service Manager</a></li>
+                <li><a href="calendar.html"><span class="icon">📅</span> Calendar View</a></li>
+                <li><a href="job-sites.html"><span class="icon">📍</span> Job Sites</a></li>
+                <li><a href="recurring-services.html"><span class="icon">🔄</span> Recurring Services</a></li>
+                <li><a href="action-history.html"><span class="icon">📜</span> Action History</a></li>
+                <li><a href="manifest-report.html"><span class="icon">📊</span> Manifest Report</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <h2>Service Manager</h2>
+                <div class="user-menu">
+                    <span>Service Manager</span>
+                    <div class="user-avatar">SM</div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Date Selector -->
+                <div class="date-selector-card">
+                    <label>Show services through:</label>
+                    <input type="date" value="2025-01-15">
+                    <button class="btn btn-primary">Load Services</button>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-card">
+                        <div class="stat-icon overdue">!</div>
+                        <div class="stat-info">
+                            <h3>3</h3>
+                            <p>Overdue Services</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">⏳</div>
+                        <div class="stat-info">
+                            <h3>8</h3>
+                            <p>Pending This Period</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon total">📋</div>
+                        <div class="stat-info">
+                            <h3>11</h3>
+                            <p>Total Services</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Error Example (hidden by default) -->
+                <div class="validation-error" style="display: none;">
+                    <h4>Validation Errors</h4>
+                    <ul>
+                        <li>Smith Residence (Dec 28): Cannot complete - older service on Dec 21 is still pending</li>
+                        <li>Jones Property: Cannot reschedule without entering a new date</li>
+                    </ul>
+                </div>
+
+                <!-- Actions Bar -->
+                <div class="actions-bar">
+                    <div class="left-actions">
+                        <button class="btn btn-success" onclick="showProcessModal()">Process Selected Actions</button>
+                        <button class="btn btn-secondary">Print Selected Tickets</button>
+                    </div>
+                    <div class="right-actions">
+                        <span style="color: #666; font-size: 0.9rem;">3 services selected</span>
+                    </div>
+                </div>
+
+                <!-- Service Table -->
+                <div class="service-table-container">
+                    <table class="service-table">
+                        <thead>
+                            <tr>
+                                <th class="checkbox-cell"><input type="checkbox"></th>
+                                <th>Day</th>
+                                <th>Date</th>
+                                <th>Job Site</th>
+                                <th>Service Type</th>
+                                <th>Frequency</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                                <th>New Date</th>
+                                <th>Print</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="overdue selected">
+                                <td class="checkbox-cell"><input type="checkbox" checked></td>
+                                <td>Sat</td>
+                                <td>Dec 28</td>
+                                <td>
+                                    <strong>Smith Residence</strong><br>
+                                    <span style="font-size: 0.8rem; color: #666;">123 Main St, Raleigh</span>
+                                </td>
+                                <td>Inspection</td>
+                                <td>Every 4 weeks</td>
+                                <td><span class="status-badge overdue">3 days overdue</span></td>
+                                <td>
+                                    <select class="action-select">
+                                        <option value="">Select action...</option>
+                                        <option value="complete" selected>Complete</option>
+                                        <option value="reschedule">Reschedule</option>
+                                        <option value="cancel">Cancel</option>
+                                    </select>
+                                </td>
+                                <td><input type="date" class="table-date-input" value="2024-12-31"></td>
+                                <td>
+                                    <label class="print-checkbox">
+                                        <input type="checkbox"> Print
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr class="overdue">
+                                <td class="checkbox-cell"><input type="checkbox"></td>
+                                <td>Sun</td>
+                                <td>Dec 29</td>
+                                <td>
+                                    <strong>Jones Property</strong><br>
+                                    <span style="font-size: 0.8rem; color: #666;">456 Oak Ave, Durham</span>
+                                </td>
+                                <td>Maintenance</td>
+                                <td>Every 2 weeks</td>
+                                <td><span class="status-badge overdue">2 days overdue</span></td>
+                                <td>
+                                    <select class="action-select">
+                                        <option value="">Select action...</option>
+                                        <option value="complete">Complete</option>
+                                        <option value="reschedule">Reschedule</option>
+                                        <option value="cancel">Cancel</option>
+                                    </select>
+                                </td>
+                                <td><input type="date" class="table-date-input"></td>
+                                <td>
+                                    <label class="print-checkbox">
+                                        <input type="checkbox"> Print
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr class="overdue selected">
+                                <td class="checkbox-cell"><input type="checkbox" checked></td>
+                                <td>Mon</td>
+                                <td>Dec 30</td>
+                                <td>
+                                    <strong>Downtown Office</strong><br>
+                                    <span style="font-size: 0.8rem; color: #666;">789 Corp Blvd, Cary</span>
+                                </td>
+                                <td>Inspection</td>
+                                <td>Weekly</td>
+                                <td><span class="status-badge overdue">1 day overdue</span></td>
+                                <td>
+                                    <select class="action-select">
+                                        <option value="">Select action...</option>
+                                        <option value="complete">Complete</option>
+                                        <option value="reschedule" selected>Reschedule</option>
+                                        <option value="cancel">Cancel</option>
+                                    </select>
+                                </td>
+                                <td><input type="date" class="table-date-input" value="2025-01-06"></td>
+                                <td>
+                                    <label class="print-checkbox">
+                                        <input type="checkbox"> Print
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr class="today">
+                                <td class="checkbox-cell"><input type="checkbox"></td>
+                                <td>Tue</td>
+                                <td>Dec 31</td>
+                                <td>
+                                    <strong>ABC Corporation</strong><br>
+                                    <span style="font-size: 0.8rem; color: #666;">321 Business Park, Raleigh</span>
+                                </td>
+                                <td>Inspection</td>
+                                <td>Every 2 weeks</td>
+                                <td><span class="status-badge today">Due today</span></td>
+                                <td>
+                                    <select class="action-select">
+                                        <option value="">Select action...</option>
+                                        <option value="complete">Complete</option>
+                                        <option value="reschedule">Reschedule</option>
+                                        <option value="cancel">Cancel</option>
+                                    </select>
+                                </td>
+                                <td><input type="date" class="table-date-input"></td>
+                                <td>
+                                    <label class="print-checkbox">
+                                        <input type="checkbox"> Print
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="checkbox-cell"><input type="checkbox"></td>
+                                <td>Thu</td>
+                                <td>Jan 2</td>
+                                <td>
+                                    <strong>Riverfront Plaza</strong><br>
+                                    <span style="font-size: 0.8rem; color: #666;">555 River Rd, Durham</span>
+                                </td>
+                                <td>Maintenance</td>
+                                <td>Every 4 weeks</td>
+                                <td><span class="status-badge upcoming">In 2 days</span></td>
+                                <td>
+                                    <select class="action-select">
+                                        <option value="">Select action...</option>
+                                        <option value="complete">Complete</option>
+                                        <option value="reschedule">Reschedule</option>
+                                        <option value="cancel">Cancel</option>
+                                    </select>
+                                </td>
+                                <td><input type="date" class="table-date-input"></td>
+                                <td>
+                                    <label class="print-checkbox">
+                                        <input type="checkbox" checked> Print
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr class="selected">
+                                <td class="checkbox-cell"><input type="checkbox" checked></td>
+                                <td>Fri</td>
+                                <td>Jan 3</td>
+                                <td>
+                                    <strong>Hillside Apartments</strong><br>
+                                    <span style="font-size: 0.8rem; color: #666;">888 Hill St, Chapel Hill</span>
+                                </td>
+                                <td>Inspection</td>
+                                <td>Every 8 weeks</td>
+                                <td><span class="status-badge upcoming">In 3 days</span></td>
+                                <td>
+                                    <select class="action-select">
+                                        <option value="">Select action...</option>
+                                        <option value="complete">Complete</option>
+                                        <option value="reschedule">Reschedule</option>
+                                        <option value="cancel" selected>Cancel</option>
+                                    </select>
+                                </td>
+                                <td><input type="date" class="table-date-input" disabled></td>
+                                <td>
+                                    <label class="print-checkbox">
+                                        <input type="checkbox" disabled> Print
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="checkbox-cell"><input type="checkbox"></td>
+                                <td>Mon</td>
+                                <td>Jan 6</td>
+                                <td>
+                                    <strong>Smith Residence</strong><br>
+                                    <span style="font-size: 0.8rem; color: #666;">123 Main St, Raleigh</span>
+                                </td>
+                                <td>Maintenance</td>
+                                <td>Every 2 weeks</td>
+                                <td><span class="status-badge upcoming">In 6 days</span></td>
+                                <td>
+                                    <select class="action-select">
+                                        <option value="">Select action...</option>
+                                        <option value="complete">Complete</option>
+                                        <option value="reschedule">Reschedule</option>
+                                        <option value="cancel">Cancel</option>
+                                    </select>
+                                </td>
+                                <td><input type="date" class="table-date-input"></td>
+                                <td>
+                                    <label class="print-checkbox">
+                                        <input type="checkbox"> Print
+                                    </label>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Process Summary Modal -->
+    <div class="modal-overlay" id="processModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Processing Summary</h3>
+                <button class="modal-close" onclick="hideProcessModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-item">
+                    <span class="summary-label">Services Completed</span>
+                    <span class="summary-value success">1</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Services Rescheduled</span>
+                    <span class="summary-value">1</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Services Cancelled</span>
+                    <span class="summary-value">1</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Tickets Printed</span>
+                    <span class="summary-value">0</span>
+                </div>
+                <div class="summary-item" style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #e0e0e0;">
+                    <span class="summary-label"><strong>Total Actions</strong></span>
+                    <span class="summary-value"><strong>3</strong></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="hideProcessModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showProcessModal() {
+            document.getElementById('processModal').classList.add('active');
+        }
+        function hideProcessModal() {
+            document.getElementById('processModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

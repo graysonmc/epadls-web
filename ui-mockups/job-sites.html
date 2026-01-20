@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Sites - EPADLS Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1a1a2e;
+            color: white;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .sidebar-header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .sidebar-header span {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 12px 0;
+        }
+        .nav-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .nav-menu li a:hover {
+            background: #2d2d44;
+            color: white;
+        }
+        .nav-menu li a.active {
+            background: #1a73e8;
+            color: white;
+        }
+        .nav-menu li a .icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h2 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .search-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        .search-input:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        .filter-select {
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: white;
+            min-width: 150px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1557b0;
+        }
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-pill {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stat-pill strong {
+            color: #1a73e8;
+            font-size: 1.2rem;
+        }
+        .stat-pill span {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        .data-table tr.selected {
+            background: #e8f0fe;
+        }
+
+        /* Site Name Cell */
+        .site-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .site-icon {
+            width: 36px;
+            height: 36px;
+            background: #e8f0fe;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a73e8;
+        }
+        .site-name-text strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+        .site-name-text span {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Services Count Badge */
+        .services-badge {
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Actions */
+        .row-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #f0f0f0;
+            border-color: #ccc;
+        }
+        .action-btn.edit:hover {
+            background: #e8f0fe;
+            border-color: #1a73e8;
+            color: #1a73e8;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .detail-panel.active {
+            display: block;
+        }
+        .detail-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .detail-header h3 {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .detail-body {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .detail-section h4 {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        .detail-label {
+            width: 100px;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        .detail-value {
+            flex: 1;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        .services-list {
+            list-style: none;
+        }
+        .services-list li {
+            padding: 10px 14px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .service-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .service-info strong {
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .service-info span {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .next-date {
+            font-size: 0.85rem;
+            color: #1a73e8;
+        }
+        .next-date.overdue {
+            color: #c5221f;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>EPADLS Scheduler</h1>
+                <span>Service Management</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="service-manager.html"><span class="icon">📋</span> Service Manager</a></li>
+                <li><a href="calendar.html"><span class="icon">📅</span> Calendar View</a></li>
+                <li><a href="job-sites.html" class="active"><span class="icon">📍</span> Job Sites</a></li>
+                <li><a href="recurring-services.html"><span class="icon">🔄</span> Recurring Services</a></li>
+                <li><a href="action-history.html"><span class="icon">📜</span> Action History</a></li>
+                <li><a href="manifest-report.html"><span class="icon">📊</span> Manifest Report</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <h2>Job Sites</h2>
+                <div class="user-menu">
+                    <span>Service Manager</span>
+                    <div class="user-avatar">SM</div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <input type="text" class="search-input" placeholder="Search job sites...">
+                    <select class="filter-select">
+                        <option value="">All Counties</option>
+                        <option value="wake">Wake</option>
+                        <option value="durham">Durham</option>
+                        <option value="orange">Orange</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="showAddModal()">+ Add Job Site</button>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-pill">
+                        <strong>24</strong>
+                        <span>Total Job Sites</span>
+                    </div>
+                    <div class="stat-pill">
+                        <strong>47</strong>
+                        <span>Active Services</span>
+                    </div>
+                    <div class="stat-pill">
+                        <strong>5</strong>
+                        <span>Counties</span>
+                    </div>
+                </div>
+
+                <!-- Job Sites Table -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Job Site</th>
+                                <th>Address</th>
+                                <th>County</th>
+                                <th>Active Services</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="selected" onclick="showDetail()">
+                                <td>
+                                    <div class="site-name-cell">
+                                        <div class="site-icon">📍</div>
+                                        <div class="site-name-text">
+                                            <strong>Smith Residence</strong>
+                                            <span>JS-001</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>123 Main St, Raleigh, NC 27601</td>
+                                <td>Wake</td>
+                                <td><span class="services-badge">3 services</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit" onclick="event.stopPropagation(); showEditModal()">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="site-name-cell">
+                                        <div class="site-icon">📍</div>
+                                        <div class="site-name-text">
+                                            <strong>Jones Property</strong>
+                                            <span>JS-002</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>456 Oak Ave, Durham, NC 27705</td>
+                                <td>Durham</td>
+                                <td><span class="services-badge">2 services</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="site-name-cell">
+                                        <div class="site-icon">📍</div>
+                                        <div class="site-name-text">
+                                            <strong>ABC Corporation</strong>
+                                            <span>JS-003</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>789 Corp Blvd, Cary, NC 27513</td>
+                                <td>Wake</td>
+                                <td><span class="services-badge">1 service</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="site-name-cell">
+                                        <div class="site-icon">📍</div>
+                                        <div class="site-name-text">
+                                            <strong>Downtown Office</strong>
+                                            <span>JS-004</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>321 Business Park, Raleigh, NC 27601</td>
+                                <td>Wake</td>
+                                <td><span class="services-badge">1 service</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="site-name-cell">
+                                        <div class="site-icon">📍</div>
+                                        <div class="site-name-text">
+                                            <strong>Riverfront Plaza</strong>
+                                            <span>JS-005</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>555 River Rd, Durham, NC 27705</td>
+                                <td>Durham</td>
+                                <td><span class="services-badge">2 services</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="site-name-cell">
+                                        <div class="site-icon">📍</div>
+                                        <div class="site-name-text">
+                                            <strong>Hillside Apartments</strong>
+                                            <span>JS-006</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>888 Hill St, Chapel Hill, NC 27514</td>
+                                <td>Orange</td>
+                                <td><span class="services-badge">1 service</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Detail Panel -->
+                <div class="detail-panel active" id="detailPanel">
+                    <div class="detail-header">
+                        <h3>Smith Residence</h3>
+                        <button class="btn btn-secondary" onclick="hideDetail()">Close</button>
+                    </div>
+                    <div class="detail-body">
+                        <div class="detail-section">
+                            <h4>Location Details</h4>
+                            <div class="detail-row">
+                                <span class="detail-label">Site ID:</span>
+                                <span class="detail-value">JS-001</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Street:</span>
+                                <span class="detail-value">123 Main St</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">City:</span>
+                                <span class="detail-value">Raleigh</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Zip Code:</span>
+                                <span class="detail-value">27601</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">County:</span>
+                                <span class="detail-value">Wake</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Coordinates:</span>
+                                <span class="detail-value">35.7796, -78.6382</span>
+                            </div>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Active Services</h4>
+                            <ul class="services-list">
+                                <li>
+                                    <div class="service-info">
+                                        <strong>Inspection</strong>
+                                        <span>Every 4 weeks - Mondays</span>
+                                    </div>
+                                    <span class="next-date overdue">Dec 28 (overdue)</span>
+                                </li>
+                                <li>
+                                    <div class="service-info">
+                                        <strong>Maintenance</strong>
+                                        <span>Every 2 weeks</span>
+                                    </div>
+                                    <span class="next-date">Jan 6</span>
+                                </li>
+                                <li>
+                                    <div class="service-info">
+                                        <strong>Annual Review</strong>
+                                        <span>Annually</span>
+                                    </div>
+                                    <span class="next-date">Mar 15</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Job Site Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Edit Job Site</h3>
+                <button class="modal-close" onclick="hideEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Job Site Name</label>
+                    <input type="text" value="Smith Residence">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Street Number</label>
+                        <input type="text" value="123">
+                    </div>
+                    <div class="form-group">
+                        <label>Street Address</label>
+                        <input type="text" value="Main St">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" value="Raleigh">
+                    </div>
+                    <div class="form-group">
+                        <label>Zip Code</label>
+                        <input type="text" value="27601">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>County</label>
+                    <select>
+                        <option value="wake" selected>Wake</option>
+                        <option value="durham">Durham</option>
+                        <option value="orange">Orange</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Latitude</label>
+                        <input type="text" value="35.7796">
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude</label>
+                        <input type="text" value="-78.6382">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideEditModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="hideEditModal()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDetail() {
+            document.getElementById('detailPanel').classList.add('active');
+        }
+        function hideDetail() {
+            document.getElementById('detailPanel').classList.remove('active');
+        }
+        function showEditModal() {
+            document.getElementById('editModal').classList.add('active');
+        }
+        function hideEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+        function showAddModal() {
+            document.getElementById('editModal').classList.add('active');
+        }
+    </script>
+</body>
+</html>

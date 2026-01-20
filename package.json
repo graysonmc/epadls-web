@@ -1,0 +1,30 @@
+{
+  "name": "epadls-scheduler",
+  "version": "1.0.0",
+  "description": "EPADLS Scheduling System for Google Sheets",
+  "main": "Code.js",
+  "scripts": {
+    "push:dev": "cp .clasp-dev.json .clasp.json && clasp push",
+    "push:prod": "cp .clasp-prod.json .clasp.json && clasp push",
+    "pull:dev": "cp .clasp-dev.json .clasp.json && clasp pull",
+    "pull:prod": "cp .clasp-prod.json .clasp.json && clasp pull",
+    "logs": "clasp tail-logs",
+    "open:dev": "cp .clasp-dev.json .clasp.json && clasp open-script",
+    "open:prod": "cp .clasp-prod.json .clasp.json && clasp open-script",
+    "deploy:dev": "cp .clasp-dev.json .clasp.json && clasp create-deployment --description 'Development'",
+    "deploy:prod": "cp .clasp-prod.json .clasp.json && clasp create-deployment --description 'Production'",
+    "backup": "clasp pull && git add . && git commit -m 'Backup from Apps Script'",
+    "status": "clasp show-file-status",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graysonmc/epadls-scheduler.git"
+  },
+  "keywords": ["google-apps-script", "scheduling", "service-management"],
+  "author": "Grayson McNeish",
+  "license": "MIT",
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
+}

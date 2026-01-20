@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar View - EPADLS Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1a1a2e;
+            color: white;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .sidebar-header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .sidebar-header span {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 12px 0;
+        }
+        .nav-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .nav-menu li a:hover {
+            background: #2d2d44;
+            color: white;
+        }
+        .nav-menu li a.active {
+            background: #1a73e8;
+            color: white;
+        }
+        .nav-menu li a .icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h2 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Calendar Navigation */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .month-nav h3 {
+            font-size: 1.5rem;
+            color: #333;
+            min-width: 200px;
+            text-align: center;
+        }
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            background: #f0f0f0;
+            border-color: #ccc;
+        }
+        .today-btn {
+            padding: 10px 20px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .today-btn:hover {
+            background: #1557b0;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        .legend-dot.overdue { background: #f4cccc; border: 1px solid #c5221f; }
+        .legend-dot.rescheduled { background: #e1d5f0; border: 1px solid #9c27b0; }
+        .legend-dot.scheduled { background: #e8f0fe; border: 1px solid #1a73e8; }
+        .legend-dot.today { background: #fff2cc; border: 1px solid #f9ab00; }
+
+        /* Calendar Grid */
+        .calendar-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #4a86e8;
+            color: white;
+        }
+        .calendar-header div {
+            padding: 14px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .calendar-day {
+            min-height: 120px;
+            border: 1px solid #e8e8e8;
+            padding: 8px;
+            background: white;
+            position: relative;
+        }
+        .calendar-day.weekend {
+            background: #f9f9f9;
+        }
+        .calendar-day.today {
+            background: #fff8e1;
+        }
+        .calendar-day.other-month {
+            background: #f5f5f5;
+        }
+        .calendar-day.other-month .day-number {
+            color: #bbb;
+        }
+        .day-number {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .day-number.today {
+            background: #1a73e8;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Service Cards */
+        .service-card {
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            position: relative;
+        }
+        .service-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .service-card.scheduled {
+            background: #e8f0fe;
+            border-left: 3px solid #1a73e8;
+            color: #1a73e8;
+        }
+        .service-card.overdue {
+            background: #fce8e6;
+            border-left: 3px solid #c5221f;
+            color: #c5221f;
+        }
+        .service-card.rescheduled {
+            background: #f3e8fd;
+            border-left: 3px solid #9c27b0;
+            color: #7b1fa2;
+        }
+        .service-card .site-name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .service-card .service-type {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+        .more-services {
+            font-size: 0.7rem;
+            color: #666;
+            text-align: center;
+            padding: 4px;
+            cursor: pointer;
+        }
+        .more-services:hover {
+            color: #1a73e8;
+        }
+
+        /* Tooltip */
+        .service-card .tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 100;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .service-card .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #333;
+        }
+        .service-card:hover .tooltip {
+            display: block;
+        }
+        .tooltip-row {
+            margin-bottom: 4px;
+        }
+        .tooltip-label {
+            color: #aaa;
+            margin-right: 8px;
+        }
+
+        /* Service Detail Popover */
+        .popover-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .popover-overlay.active {
+            display: flex;
+        }
+        .popover {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .popover-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .popover-header h3 {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .popover-header p {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 4px;
+        }
+        .popover-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            line-height: 1;
+        }
+        .popover-body {
+            padding: 20px 24px;
+        }
+        .popover-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        .popover-row:last-child {
+            margin-bottom: 0;
+        }
+        .popover-label {
+            width: 100px;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        .popover-value {
+            flex: 1;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        .popover-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        .btn-success {
+            background: #34a853;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #2d9249;
+        }
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>EPADLS Scheduler</h1>
+                <span>Service Management</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="service-manager.html"><span class="icon">📋</span> Service Manager</a></li>
+                <li><a href="calendar.html" class="active"><span class="icon">📅</span> Calendar View</a></li>
+                <li><a href="job-sites.html"><span class="icon">📍</span> Job Sites</a></li>
+                <li><a href="recurring-services.html"><span class="icon">🔄</span> Recurring Services</a></li>
+                <li><a href="action-history.html"><span class="icon">📜</span> Action History</a></li>
+                <li><a href="manifest-report.html"><span class="icon">📊</span> Manifest Report</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <h2>Calendar View</h2>
+                <div class="user-menu">
+                    <span>Service Manager</span>
+                    <div class="user-avatar">SM</div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Calendar Navigation -->
+                <div class="calendar-nav">
+                    <div class="month-nav">
+                        <button class="nav-btn">◀</button>
+                        <h3>December 2024</h3>
+                        <button class="nav-btn">▶</button>
+                        <button class="today-btn">Today</button>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-dot overdue"></div>
+                            <span>Overdue</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot rescheduled"></div>
+                            <span>Rescheduled</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot scheduled"></div>
+                            <span>Scheduled</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot today"></div>
+                            <span>Today</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div>Sunday</div>
+                        <div>Monday</div>
+                        <div>Tuesday</div>
+                        <div>Wednesday</div>
+                        <div>Thursday</div>
+                        <div>Friday</div>
+                        <div>Saturday</div>
+                    </div>
+                    <div class="calendar-grid">
+                        <!-- Week 1 -->
+                        <div class="calendar-day weekend">
+                            <div class="day-number">1</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">2</div>
+                            <div class="service-card scheduled" onclick="showPopover()">
+                                <div class="site-name">Smith Residence</div>
+                                <div class="service-type">Inspection</div>
+                                <div class="tooltip">
+                                    <div class="tooltip-row"><span class="tooltip-label">Site:</span>Smith Residence</div>
+                                    <div class="tooltip-row"><span class="tooltip-label">Service:</span>Inspection</div>
+                                    <div class="tooltip-row"><span class="tooltip-label">Freq:</span>Every 4 weeks</div>
+                                    <div class="tooltip-row"><span class="tooltip-label">Address:</span>123 Main St</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">3</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">4</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">Jones Property</div>
+                                <div class="service-type">Maintenance</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">5</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">6</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">ABC Corp</div>
+                                <div class="service-type">Inspection</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day weekend">
+                            <div class="day-number">7</div>
+                        </div>
+
+                        <!-- Week 2 -->
+                        <div class="calendar-day weekend">
+                            <div class="day-number">8</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">9</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">Downtown Office</div>
+                                <div class="service-type">Weekly Inspection</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">10</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">11</div>
+                            <div class="service-card rescheduled">
+                                <div class="site-name">Hillside Apts</div>
+                                <div class="service-type">Rescheduled</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">12</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">13</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">Riverfront Plaza</div>
+                                <div class="service-type">Maintenance</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day weekend">
+                            <div class="day-number">14</div>
+                        </div>
+
+                        <!-- Week 3 -->
+                        <div class="calendar-day weekend">
+                            <div class="day-number">15</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">16</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">Smith Residence</div>
+                                <div class="service-type">Maintenance</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">17</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">18</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">Jones Property</div>
+                                <div class="service-type">Maintenance</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">19</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">20</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">ABC Corp</div>
+                                <div class="service-type">Inspection</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day weekend">
+                            <div class="day-number">21</div>
+                        </div>
+
+                        <!-- Week 4 -->
+                        <div class="calendar-day weekend">
+                            <div class="day-number">22</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">23</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">Downtown Office</div>
+                                <div class="service-type">Weekly Inspection</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">24</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">25</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">26</div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">27</div>
+                        </div>
+                        <div class="calendar-day weekend">
+                            <div class="day-number">28</div>
+                            <div class="service-card overdue">
+                                <div class="site-name">Smith Residence</div>
+                                <div class="service-type">OVERDUE</div>
+                            </div>
+                        </div>
+
+                        <!-- Week 5 -->
+                        <div class="calendar-day weekend">
+                            <div class="day-number">29</div>
+                            <div class="service-card overdue">
+                                <div class="site-name">Jones Property</div>
+                                <div class="service-type">OVERDUE</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day">
+                            <div class="day-number">30</div>
+                            <div class="service-card overdue">
+                                <div class="site-name">Downtown Office</div>
+                                <div class="service-type">OVERDUE</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day today">
+                            <div class="day-number today">31</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">ABC Corporation</div>
+                                <div class="service-type">Due Today</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day other-month">
+                            <div class="day-number">1</div>
+                        </div>
+                        <div class="calendar-day other-month">
+                            <div class="day-number">2</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">Riverfront Plaza</div>
+                                <div class="service-type">Maintenance</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day other-month">
+                            <div class="day-number">3</div>
+                            <div class="service-card scheduled">
+                                <div class="site-name">Hillside Apts</div>
+                                <div class="service-type">Inspection</div>
+                            </div>
+                        </div>
+                        <div class="calendar-day weekend other-month">
+                            <div class="day-number">4</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Service Detail Popover -->
+    <div class="popover-overlay" id="servicePopover">
+        <div class="popover">
+            <div class="popover-header">
+                <div>
+                    <h3>Smith Residence</h3>
+                    <p>Monday, December 2, 2024</p>
+                </div>
+                <button class="popover-close" onclick="hidePopover()">&times;</button>
+            </div>
+            <div class="popover-body">
+                <div class="popover-row">
+                    <span class="popover-label">Service:</span>
+                    <span class="popover-value">Inspection</span>
+                </div>
+                <div class="popover-row">
+                    <span class="popover-label">Frequency:</span>
+                    <span class="popover-value">Every 4 weeks</span>
+                </div>
+                <div class="popover-row">
+                    <span class="popover-label">Address:</span>
+                    <span class="popover-value">123 Main St, Raleigh, NC</span>
+                </div>
+                <div class="popover-row">
+                    <span class="popover-label">Notes:</span>
+                    <span class="popover-value">Gate code: 1234</span>
+                </div>
+            </div>
+            <div class="popover-footer">
+                <button class="btn btn-success">Complete</button>
+                <button class="btn btn-secondary">Reschedule</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPopover() {
+            document.getElementById('servicePopover').classList.add('active');
+        }
+        function hidePopover() {
+            document.getElementById('servicePopover').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

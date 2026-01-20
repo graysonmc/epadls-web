@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>County Manifest Report - EPADLS Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1a1a2e;
+            color: white;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .sidebar-header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .sidebar-header span {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 12px 0;
+        }
+        .nav-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .nav-menu li a:hover {
+            background: #2d2d44;
+            color: white;
+        }
+        .nav-menu li a.active {
+            background: #1a73e8;
+            color: white;
+        }
+        .nav-menu li a .icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h2 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Report Generator Card */
+        .generator-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .generator-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .generator-header h3 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .generator-header p {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .generator-body {
+            padding: 24px;
+            display: flex;
+            gap: 24px;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background: white;
+        }
+        .form-group select:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1557b0;
+        }
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+        .btn-success {
+            background: #34a853;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #2d9249;
+        }
+
+        /* Report Results */
+        .report-results {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .report-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .report-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .report-title h3 {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .report-badge {
+            background: #e6f4ea;
+            color: #137333;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .report-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Summary Stats */
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 20px 24px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .summary-stat {
+            text-align: center;
+        }
+        .summary-stat .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .summary-stat .label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* County Badge */
+        .county-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .county-badge.wake {
+            background: #e8f0fe;
+            color: #1a73e8;
+        }
+        .county-badge.durham {
+            background: #fef7e0;
+            color: #b06000;
+        }
+        .county-badge.orange {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+        }
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        .empty-state h3 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .pagination-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .page-btn:hover {
+            background: #f0f0f0;
+            border-color: #ccc;
+        }
+        .page-btn.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>EPADLS Scheduler</h1>
+                <span>Service Management</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="service-manager.html"><span class="icon">📋</span> Service Manager</a></li>
+                <li><a href="calendar.html"><span class="icon">📅</span> Calendar View</a></li>
+                <li><a href="job-sites.html"><span class="icon">📍</span> Job Sites</a></li>
+                <li><a href="recurring-services.html"><span class="icon">🔄</span> Recurring Services</a></li>
+                <li><a href="action-history.html"><span class="icon">📜</span> Action History</a></li>
+                <li><a href="manifest-report.html" class="active"><span class="icon">📊</span> Manifest Report</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <h2>County Manifest Report</h2>
+                <div class="user-menu">
+                    <span>Service Manager</span>
+                    <div class="user-avatar">SM</div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Report Generator -->
+                <div class="generator-card">
+                    <div class="generator-header">
+                        <h3>Generate Manifest Report</h3>
+                        <p>Generate quarterly compliance reports filtered by county for regulatory submissions</p>
+                    </div>
+                    <div class="generator-body">
+                        <div class="form-group">
+                            <label>Quarter</label>
+                            <select>
+                                <option value="q4-2024" selected>Q4 2024 (Oct - Dec)</option>
+                                <option value="q3-2024">Q3 2024 (Jul - Sep)</option>
+                                <option value="q2-2024">Q2 2024 (Apr - Jun)</option>
+                                <option value="q1-2024">Q1 2024 (Jan - Mar)</option>
+                                <option value="q4-2023">Q4 2023 (Oct - Dec)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>County</label>
+                            <select>
+                                <option value="">All Counties</option>
+                                <option value="wake" selected>Wake</option>
+                                <option value="durham">Durham</option>
+                                <option value="orange">Orange</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary">Generate Report</button>
+                    </div>
+                </div>
+
+                <!-- Report Results -->
+                <div class="report-results">
+                    <div class="report-header">
+                        <div class="report-title">
+                            <h3>Q4 2024 - Wake County</h3>
+                            <span class="report-badge">45 services</span>
+                        </div>
+                        <div class="report-actions">
+                            <button class="btn btn-secondary">Print Report</button>
+                            <button class="btn btn-success">Export CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Stats -->
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <div class="value">45</div>
+                            <div class="label">Total Services</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value">3</div>
+                            <div class="label">Job Sites</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value">Oct 3</div>
+                            <div class="label">First Service</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value">Dec 31</div>
+                            <div class="label">Last Service</div>
+                        </div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date Completed</th>
+                                <th>Quarter</th>
+                                <th>County</th>
+                                <th>Job Site</th>
+                                <th>Address</th>
+                                <th>Service Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Dec 31, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>ABC Corporation</strong></td>
+                                <td>789 Corp Blvd, Cary, NC 27513</td>
+                                <td>Inspection</td>
+                            </tr>
+                            <tr>
+                                <td>Dec 24, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>123 Main St, Raleigh, NC 27601</td>
+                                <td>Maintenance</td>
+                            </tr>
+                            <tr>
+                                <td>Dec 20, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>ABC Corporation</strong></td>
+                                <td>789 Corp Blvd, Cary, NC 27513</td>
+                                <td>Inspection</td>
+                            </tr>
+                            <tr>
+                                <td>Dec 17, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>123 Main St, Raleigh, NC 27601</td>
+                                <td>Inspection</td>
+                            </tr>
+                            <tr>
+                                <td>Dec 10, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>123 Main St, Raleigh, NC 27601</td>
+                                <td>Maintenance</td>
+                            </tr>
+                            <tr>
+                                <td>Dec 6, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>ABC Corporation</strong></td>
+                                <td>789 Corp Blvd, Cary, NC 27513</td>
+                                <td>Inspection</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 26, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>123 Main St, Raleigh, NC 27601</td>
+                                <td>Maintenance</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 22, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>ABC Corporation</strong></td>
+                                <td>789 Corp Blvd, Cary, NC 27513</td>
+                                <td>Inspection</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 19, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>123 Main St, Raleigh, NC 27601</td>
+                                <td>Inspection</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 12, 2024</td>
+                                <td>Q4 2024</td>
+                                <td><span class="county-badge wake">Wake</span></td>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>123 Main St, Raleigh, NC 27601</td>
+                                <td>Maintenance</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            Showing 1-10 of 45 entries
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="page-btn" disabled>◀</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">4</button>
+                            <button class="page-btn">5</button>
+                            <button class="page-btn">▶</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

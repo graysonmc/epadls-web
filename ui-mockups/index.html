@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPADLS Scheduler - UI Mockups</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+        .mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .mockup-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .mockup-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .mockup-card h2 {
+            color: #1a73e8;
+            margin-bottom: 12px;
+            font-size: 1.25rem;
+        }
+        .mockup-card p {
+            color: #666;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .mockup-card a {
+            display: inline-block;
+            background: #1a73e8;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .mockup-card a:hover {
+            background: #1557b0;
+        }
+        .note {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            padding: 16px 24px;
+            background: #e8f0fe;
+            border-radius: 8px;
+            color: #1a73e8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>EPADLS Scheduler - Web UI Mockups</h1>
+
+    <div class="note">
+        These mockups replicate the existing Google Sheets functionality as a web application.
+        Click each card to view the interactive mockup.
+    </div>
+
+    <div class="mockup-grid">
+        <div class="mockup-card">
+            <h2>Service Manager</h2>
+            <p>The main workflow screen. Enter a date to load services, then complete, reschedule, or cancel them. Replaces the Service Management sheet.</p>
+            <a href="service-manager.html">View Mockup</a>
+        </div>
+
+        <div class="mockup-card">
+            <h2>Calendar View</h2>
+            <p>Monthly calendar showing all scheduled services with color coding for overdue, rescheduled, and upcoming services.</p>
+            <a href="calendar.html">View Mockup</a>
+        </div>
+
+        <div class="mockup-card">
+            <h2>Job Sites</h2>
+            <p>Manage all job site locations with addresses, counties, and coordinates. View and edit site details.</p>
+            <a href="job-sites.html">View Mockup</a>
+        </div>
+
+        <div class="mockup-card">
+            <h2>Recurring Services</h2>
+            <p>Configure service schedules with frequencies, day constraints, and tracking. Replaces the Recurring Services sheet.</p>
+            <a href="recurring-services.html">View Mockup</a>
+        </div>
+
+        <div class="mockup-card">
+            <h2>Action History</h2>
+            <p>Complete audit trail of all service actions - completions, cancellations, reschedules, and prints.</p>
+            <a href="action-history.html">View Mockup</a>
+        </div>
+
+        <div class="mockup-card">
+            <h2>County Manifest Report</h2>
+            <p>Generate quarterly compliance reports filtered by county. Export for regulatory submissions.</p>
+            <a href="manifest-report.html">View Mockup</a>
+        </div>
+    </div>
+</body>
+</html>

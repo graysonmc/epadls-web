@@ -1,0 +1,27 @@
+# Logs
+logs/
+*.log
+
+# Node modules
+node_modules/
+
+# Local config
+.clasp.json
+config.local.js
+secrets.json
+
+# Backups
+backups/
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+.clasp-dev.json
+.clasp-prod.json

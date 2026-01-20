@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recurring Services - EPADLS Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1a1a2e;
+            color: white;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .sidebar-header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .sidebar-header span {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 12px 0;
+        }
+        .nav-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .nav-menu li a:hover {
+            background: #2d2d44;
+            color: white;
+        }
+        .nav-menu li a.active {
+            background: #1a73e8;
+            color: white;
+        }
+        .nav-menu li a .icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h2 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: white;
+            min-width: 150px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1557b0;
+        }
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+        .filter-spacer {
+            flex: 1;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+        .stat-card h4 {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .stat-card .value.overdue {
+            color: #c5221f;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+
+        /* Frequency Badge */
+        .freq-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: #e8f0fe;
+            color: #1a73e8;
+        }
+        .freq-badge.weekly { background: #e6f4ea; color: #137333; }
+        .freq-badge.biweekly { background: #fef7e0; color: #b06000; }
+        .freq-badge.monthly { background: #e8f0fe; color: #1a73e8; }
+        .freq-badge.quarterly { background: #f3e8fd; color: #7b1fa2; }
+        .freq-badge.annual { background: #fce8e6; color: #c5221f; }
+
+        /* Day Constraint */
+        .day-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: #f1f3f4;
+            color: #666;
+        }
+
+        /* Next Date */
+        .next-date {
+            font-weight: 500;
+        }
+        .next-date.overdue {
+            color: #c5221f;
+        }
+        .next-date.upcoming {
+            color: #1a73e8;
+        }
+
+        /* Notes Icon */
+        .notes-indicator {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Actions */
+        .row-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #f0f0f0;
+            border-color: #ccc;
+        }
+        .action-btn.edit:hover {
+            background: #e8f0fe;
+            border-color: #1a73e8;
+            color: #1a73e8;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-group .helper-text {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 4px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>EPADLS Scheduler</h1>
+                <span>Service Management</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="service-manager.html"><span class="icon">📋</span> Service Manager</a></li>
+                <li><a href="calendar.html"><span class="icon">📅</span> Calendar View</a></li>
+                <li><a href="job-sites.html"><span class="icon">📍</span> Job Sites</a></li>
+                <li><a href="recurring-services.html" class="active"><span class="icon">🔄</span> Recurring Services</a></li>
+                <li><a href="action-history.html"><span class="icon">📜</span> Action History</a></li>
+                <li><a href="manifest-report.html"><span class="icon">📊</span> Manifest Report</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <h2>Recurring Services</h2>
+                <div class="user-menu">
+                    <span>Service Manager</span>
+                    <div class="user-avatar">SM</div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <select class="filter-select">
+                        <option value="">All Job Sites</option>
+                        <option value="smith">Smith Residence</option>
+                        <option value="jones">Jones Property</option>
+                        <option value="abc">ABC Corporation</option>
+                        <option value="downtown">Downtown Office</option>
+                    </select>
+                    <select class="filter-select">
+                        <option value="">All Service Types</option>
+                        <option value="inspection">Inspection</option>
+                        <option value="maintenance">Maintenance</option>
+                    </select>
+                    <select class="filter-select">
+                        <option value="">All Frequencies</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="2weeks">Every 2 weeks</option>
+                        <option value="4weeks">Every 4 weeks</option>
+                        <option value="8weeks">Every 8 weeks</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annual">Annually</option>
+                    </select>
+                    <div class="filter-spacer"></div>
+                    <button class="btn btn-primary" onclick="showAddModal()">+ Add Service</button>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <h4>Total Services</h4>
+                        <div class="value">47</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Overdue</h4>
+                        <div class="value overdue">3</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Due This Week</h4>
+                        <div class="value">8</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>With Manifest Tracking</h4>
+                        <div class="value">12</div>
+                    </div>
+                </div>
+
+                <!-- Services Table -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Job Site</th>
+                                <th>Service Type</th>
+                                <th>Frequency</th>
+                                <th>Day</th>
+                                <th>Last Service</th>
+                                <th>Next Service</th>
+                                <th>Manifest</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="showEditModal()">
+                                <td><strong>Smith Residence</strong></td>
+                                <td>Inspection</td>
+                                <td><span class="freq-badge monthly">Every 4 weeks</span></td>
+                                <td><span class="day-badge">Monday</span></td>
+                                <td>Dec 17, 2024</td>
+                                <td><span class="next-date overdue">Dec 28 (3 days overdue)</span></td>
+                                <td>Wake</td>
+                                <td><span class="notes-indicator" title="Gate code: 1234">📝</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit" onclick="event.stopPropagation(); showEditModal()">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>Maintenance</td>
+                                <td><span class="freq-badge biweekly">Every 2 weeks</span></td>
+                                <td><span class="day-badge">—</span></td>
+                                <td>Dec 24, 2024</td>
+                                <td><span class="next-date upcoming">Jan 6</span></td>
+                                <td>—</td>
+                                <td></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Jones Property</strong></td>
+                                <td>Maintenance</td>
+                                <td><span class="freq-badge biweekly">Every 2 weeks</span></td>
+                                <td><span class="day-badge">—</span></td>
+                                <td>Dec 15, 2024</td>
+                                <td><span class="next-date overdue">Dec 29 (2 days overdue)</span></td>
+                                <td>Durham</td>
+                                <td></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Downtown Office</strong></td>
+                                <td>Inspection</td>
+                                <td><span class="freq-badge weekly">Weekly</span></td>
+                                <td><span class="day-badge">Monday</span></td>
+                                <td>Dec 23, 2024</td>
+                                <td><span class="next-date overdue">Dec 30 (1 day overdue)</span></td>
+                                <td>—</td>
+                                <td></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>ABC Corporation</strong></td>
+                                <td>Inspection</td>
+                                <td><span class="freq-badge biweekly">Every 2 weeks</span></td>
+                                <td><span class="day-badge">—</span></td>
+                                <td>Dec 17, 2024</td>
+                                <td><span class="next-date">Dec 31 (today)</span></td>
+                                <td>Wake</td>
+                                <td><span class="notes-indicator" title="Contact: John Smith">📝</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Riverfront Plaza</strong></td>
+                                <td>Maintenance</td>
+                                <td><span class="freq-badge monthly">Every 4 weeks</span></td>
+                                <td><span class="day-badge">Thursday</span></td>
+                                <td>Dec 5, 2024</td>
+                                <td><span class="next-date upcoming">Jan 2</span></td>
+                                <td>Durham</td>
+                                <td></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hillside Apartments</strong></td>
+                                <td>Inspection</td>
+                                <td><span class="freq-badge quarterly">Every 8 weeks</span></td>
+                                <td><span class="day-badge">Friday</span></td>
+                                <td>Nov 8, 2024</td>
+                                <td><span class="next-date upcoming">Jan 3</span></td>
+                                <td>Orange</td>
+                                <td></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>Annual Review</td>
+                                <td><span class="freq-badge annual">Annually</span></td>
+                                <td><span class="day-badge">—</span></td>
+                                <td>Mar 15, 2024</td>
+                                <td><span class="next-date upcoming">Mar 15, 2025</span></td>
+                                <td>Wake</td>
+                                <td></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button class="action-btn edit">Edit</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Service Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Edit Recurring Service</h3>
+                <button class="modal-close" onclick="hideEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Job Site</label>
+                    <select>
+                        <option value="smith" selected>Smith Residence</option>
+                        <option value="jones">Jones Property</option>
+                        <option value="abc">ABC Corporation</option>
+                        <option value="downtown">Downtown Office</option>
+                        <option value="riverfront">Riverfront Plaza</option>
+                        <option value="hillside">Hillside Apartments</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Service Type</label>
+                        <select>
+                            <option value="inspection" selected>Inspection</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <input type="number" value="1" min="1" max="10">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Frequency</label>
+                        <select>
+                            <option value="weekly">Weekly</option>
+                            <option value="2weeks">Every 2 weeks</option>
+                            <option value="4weeks" selected>Every 4 weeks</option>
+                            <option value="8weeks">Every 8 weeks</option>
+                            <option value="3months">Every 3 months</option>
+                            <option value="4months">Every 4 months</option>
+                            <option value="6months">Every 6 months</option>
+                            <option value="annual">Annually</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Day Constraint</label>
+                        <select>
+                            <option value="">No preference</option>
+                            <option value="monday" selected>Monday</option>
+                            <option value="tuesday">Tuesday</option>
+                            <option value="wednesday">Wednesday</option>
+                            <option value="thursday">Thursday</option>
+                            <option value="friday">Friday</option>
+                        </select>
+                        <span class="helper-text">Service will be scheduled on this day when possible</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Last Service Date</label>
+                    <input type="date" value="2024-12-17">
+                    <span class="helper-text">Used to calculate the next service date</span>
+                </div>
+                <div class="form-group">
+                    <label>Manifest County</label>
+                    <select>
+                        <option value="">None (no manifest tracking)</option>
+                        <option value="wake" selected>Wake</option>
+                        <option value="durham">Durham</option>
+                        <option value="orange">Orange</option>
+                    </select>
+                    <span class="helper-text">If set, completions will be logged for county manifest reports</span>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea placeholder="Optional notes about this service...">Gate code: 1234</textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideEditModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="hideEditModal()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showEditModal() {
+            document.getElementById('editModal').classList.add('active');
+        }
+        function hideEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+        function showAddModal() {
+            document.getElementById('editModal').classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action History - EPADLS Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1a1a2e;
+            color: white;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .sidebar-header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .sidebar-header span {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 12px 0;
+        }
+        .nav-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .nav-menu li a:hover {
+            background: #2d2d44;
+            color: white;
+        }
+        .nav-menu li a.active {
+            background: #1a73e8;
+            color: white;
+        }
+        .nav-menu li a .icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-bar h2 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-group label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .filter-select,
+        .filter-input {
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: white;
+        }
+        .filter-select {
+            min-width: 150px;
+        }
+        .filter-input {
+            width: 140px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+        .filter-spacer {
+            flex: 1;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .stat-icon.completed { background: #e6f4ea; }
+        .stat-icon.rescheduled { background: #f3e8fd; }
+        .stat-icon.cancelled { background: #fce8e6; }
+        .stat-icon.printed { background: #e8f0fe; }
+        .stat-info h4 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .stat-info p {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Action Type Badge */
+        .action-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .action-badge.completed {
+            background: #e6f4ea;
+            color: #137333;
+        }
+        .action-badge.rescheduled {
+            background: #f3e8fd;
+            color: #7b1fa2;
+        }
+        .action-badge.cancelled {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+        .action-badge.printed {
+            background: #e8f0fe;
+            color: #1a73e8;
+        }
+        .action-badge .icon {
+            font-size: 0.9rem;
+        }
+
+        /* Date Display */
+        .date-cell {
+            white-space: nowrap;
+        }
+        .date-cell .time {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .pagination-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .page-btn:hover {
+            background: #f0f0f0;
+            border-color: #ccc;
+        }
+        .page-btn.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>EPADLS Scheduler</h1>
+                <span>Service Management</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="service-manager.html"><span class="icon">📋</span> Service Manager</a></li>
+                <li><a href="calendar.html"><span class="icon">📅</span> Calendar View</a></li>
+                <li><a href="job-sites.html"><span class="icon">📍</span> Job Sites</a></li>
+                <li><a href="recurring-services.html"><span class="icon">🔄</span> Recurring Services</a></li>
+                <li><a href="action-history.html" class="active"><span class="icon">📜</span> Action History</a></li>
+                <li><a href="manifest-report.html"><span class="icon">📊</span> Manifest Report</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <h2>Action History</h2>
+                <div class="user-menu">
+                    <span>Service Manager</span>
+                    <div class="user-avatar">SM</div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>From:</label>
+                        <input type="date" class="filter-input" value="2024-12-01">
+                    </div>
+                    <div class="filter-group">
+                        <label>To:</label>
+                        <input type="date" class="filter-input" value="2024-12-31">
+                    </div>
+                    <select class="filter-select">
+                        <option value="">All Action Types</option>
+                        <option value="completed">Completed</option>
+                        <option value="rescheduled">Rescheduled</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="printed">Printed</option>
+                    </select>
+                    <select class="filter-select">
+                        <option value="">All Job Sites</option>
+                        <option value="smith">Smith Residence</option>
+                        <option value="jones">Jones Property</option>
+                        <option value="abc">ABC Corporation</option>
+                    </select>
+                    <div class="filter-spacer"></div>
+                    <button class="btn btn-secondary">Export CSV</button>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon completed">✓</div>
+                        <div class="stat-info">
+                            <h4>156</h4>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon rescheduled">↻</div>
+                        <div class="stat-info">
+                            <h4>23</h4>
+                            <p>Rescheduled</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon cancelled">✕</div>
+                        <div class="stat-info">
+                            <h4>8</h4>
+                            <p>Cancelled</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon printed">🖨</div>
+                        <div class="stat-info">
+                            <h4>142</h4>
+                            <p>Printed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date Recorded</th>
+                                <th>Job Site</th>
+                                <th>Service Type</th>
+                                <th>Scheduled Date</th>
+                                <th>Action</th>
+                                <th>Action Date</th>
+                                <th>Performed By</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 31, 2024
+                                    <div class="time">10:45 AM</div>
+                                </td>
+                                <td><strong>ABC Corporation</strong></td>
+                                <td>Inspection</td>
+                                <td>Dec 31, 2024</td>
+                                <td><span class="action-badge completed"><span class="icon">✓</span> Completed</span></td>
+                                <td>Dec 31, 2024</td>
+                                <td>Service Manager</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 30, 2024
+                                    <div class="time">3:22 PM</div>
+                                </td>
+                                <td><strong>Downtown Office</strong></td>
+                                <td>Inspection</td>
+                                <td>Dec 30, 2024</td>
+                                <td><span class="action-badge rescheduled"><span class="icon">↻</span> Rescheduled</span></td>
+                                <td>Jan 6, 2025</td>
+                                <td>Service Manager</td>
+                                <td>Holiday week</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 30, 2024
+                                    <div class="time">2:15 PM</div>
+                                </td>
+                                <td><strong>Hillside Apartments</strong></td>
+                                <td>Inspection</td>
+                                <td>Jan 3, 2025</td>
+                                <td><span class="action-badge cancelled"><span class="icon">✕</span> Cancelled</span></td>
+                                <td>—</td>
+                                <td>Service Manager</td>
+                                <td>Building closed</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 28, 2024
+                                    <div class="time">9:30 AM</div>
+                                </td>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>Inspection</td>
+                                <td>Dec 28, 2024</td>
+                                <td><span class="action-badge printed"><span class="icon">🖨</span> Printed</span></td>
+                                <td>Dec 28, 2024</td>
+                                <td>Service Manager</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 27, 2024
+                                    <div class="time">4:45 PM</div>
+                                </td>
+                                <td><strong>Riverfront Plaza</strong></td>
+                                <td>Maintenance</td>
+                                <td>Dec 26, 2024</td>
+                                <td><span class="action-badge completed"><span class="icon">✓</span> Completed</span></td>
+                                <td>Dec 27, 2024</td>
+                                <td>Service Manager</td>
+                                <td>Completed day after scheduled</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 24, 2024
+                                    <div class="time">11:00 AM</div>
+                                </td>
+                                <td><strong>Smith Residence</strong></td>
+                                <td>Maintenance</td>
+                                <td>Dec 24, 2024</td>
+                                <td><span class="action-badge completed"><span class="icon">✓</span> Completed</span></td>
+                                <td>Dec 24, 2024</td>
+                                <td>Service Manager</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 23, 2024
+                                    <div class="time">2:30 PM</div>
+                                </td>
+                                <td><strong>Downtown Office</strong></td>
+                                <td>Inspection</td>
+                                <td>Dec 23, 2024</td>
+                                <td><span class="action-badge completed"><span class="icon">✓</span> Completed</span></td>
+                                <td>Dec 23, 2024</td>
+                                <td>Service Manager</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 20, 2024
+                                    <div class="time">10:15 AM</div>
+                                </td>
+                                <td><strong>ABC Corporation</strong></td>
+                                <td>Inspection</td>
+                                <td>Dec 20, 2024</td>
+                                <td><span class="action-badge printed"><span class="icon">🖨</span> Printed</span></td>
+                                <td>Dec 20, 2024</td>
+                                <td>Service Manager</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 20, 2024
+                                    <div class="time">10:15 AM</div>
+                                </td>
+                                <td><strong>ABC Corporation</strong></td>
+                                <td>Inspection</td>
+                                <td>Dec 20, 2024</td>
+                                <td><span class="action-badge completed"><span class="icon">✓</span> Completed</span></td>
+                                <td>Dec 20, 2024</td>
+                                <td>Service Manager</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td class="date-cell">
+                                    Dec 18, 2024
+                                    <div class="time">3:00 PM</div>
+                                </td>
+                                <td><strong>Jones Property</strong></td>
+                                <td>Maintenance</td>
+                                <td>Dec 18, 2024</td>
+                                <td><span class="action-badge rescheduled"><span class="icon">↻</span> Rescheduled</span></td>
+                                <td>Dec 29, 2024</td>
+                                <td>Service Manager</td>
+                                <td>Customer request</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            Showing 1-10 of 329 entries
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="page-btn" disabled>◀</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">...</button>
+                            <button class="page-btn">33</button>
+                            <button class="page-btn">▶</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
