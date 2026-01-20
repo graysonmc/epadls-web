@@ -1,0 +1,99 @@
+.calendar-page {
+  max-width: 1200px;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.calendar-nav h2 {
+  margin: 0;
+  min-width: 200px;
+  text-align: center;
+}
+
+.calendar-nav button {
+  padding: 8px 16px;
+  background: #4a86e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.calendar-nav button:hover {
+  background: #3a76d8;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: #ddd;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.calendar-header {
+  background: #4a86e8;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.calendar-day {
+  background: white;
+  min-height: 100px;
+  padding: 8px;
+}
+
+.calendar-day.empty {
+  background: #f9fafb;
+}
+
+.calendar-day.today {
+  background: #fff2cc;
+}
+
+.calendar-day.weekend {
+  background: #f3f3f3;
+}
+
+.day-number {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.day-services {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.service-item {
+  font-size: 11px;
+  padding: 3px 5px;
+  background: #e8f0fe;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.service-item.overdue {
+  background: #f4cccc;
+  color: #c00;
+}
+
+.more-services {
+  font-size: 10px;
+  color: #666;
+  padding: 2px;
+}

@@ -25,3 +25,11 @@ backups/
 *.temp
 .clasp-dev.json
 .clasp-prod.json
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.production
+
+# Import data (may contain sensitive info)
+api/data/import/*.csv
