@@ -19,6 +19,7 @@ function Layout() {
     { to: '/job-sites', label: 'Job Sites', icon: '📍' },
     { to: '/history', label: 'History', icon: '📜' },
     { to: '/manifests', label: 'Manifests', icon: '📄' },
+    { to: '/technicians', label: 'Technicians', icon: '👷' },
   ];
 
   return (

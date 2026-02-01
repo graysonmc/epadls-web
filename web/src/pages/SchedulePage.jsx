@@ -10,6 +10,7 @@ function SchedulePage() {
     return date.toISOString().split('T')[0];
   });
   const [actions, setActions] = useState({});
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadSchedule();
@@ -88,6 +89,15 @@ function SchedulePage() {
     }
   };
 
+  const filteredServices = services.filter(service => {
+    if (!search) return true;
+    const searchLower = search.toLowerCase();
+    return (
+      service.job_site_name?.toLowerCase().includes(searchLower) ||
+      service.service_type?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="schedule-page">
       <div className="page-header">
@@ -96,8 +106,15 @@ function SchedulePage() {
       </div>
 
       <div className="toolbar">
+        <input
+          type="text"
+          placeholder="Search by job site, service type..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search-input"
+        />
         <label>
-          Show services through:
+          Through:
           <input
             type="date"
             value={endDate}
@@ -126,7 +143,7 @@ function SchedulePage() {
             </tr>
           </thead>
           <tbody>
-            {services.map(service => {
+            {filteredServices.map(service => {
               const key = `${service.recurring_service_id}|${new Date(service.scheduled_date).toISOString().split('T')[0]}`;
               const action = actions[key] || {};
 
@@ -176,9 +193,11 @@ function SchedulePage() {
                 </tr>
               );
             })}
-            {services.length === 0 && (
+            {filteredServices.length === 0 && (
               <tr>
-                <td colSpan="8" className="no-data">No scheduled services</td>
+                <td colSpan="8" className="no-data">
+                  {search ? 'No services match your search' : 'No scheduled services'}
+                </td>
               </tr>
             )}
           </tbody>

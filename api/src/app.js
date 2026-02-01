@@ -12,6 +12,7 @@ import calendarRoutes from './routes/calendar.js';
 import historyRoutes from './routes/history.js';
 import manifestsRoutes from './routes/manifests.js';
 import ticketsRoutes from './routes/tickets.js';
+import techniciansRoutes from './routes/technicians.js';
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/manifests', manifestsRoutes);
 app.use('/api/tickets', ticketsRoutes);
+app.use('/api/technicians', techniciansRoutes);
 
 // Error handling
 app.use(errorHandler);

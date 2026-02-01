@@ -9,6 +9,9 @@ import SchedulePage from './pages/SchedulePage';
 import CalendarPage from './pages/CalendarPage';
 import HistoryPage from './pages/HistoryPage';
 import ManifestsPage from './pages/ManifestsPage';
+import ServiceDetailPage from './pages/ServiceDetailPage';
+import JobSiteDetailPage from './pages/JobSiteDetailPage';
+import TechniciansPage from './pages/TechniciansPage';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -38,11 +41,14 @@ function AppRoutes() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="job-sites" element={<JobSitesPage />} />
+        <Route path="job-sites/:siteId" element={<JobSiteDetailPage />} />
         <Route path="services" element={<ServicesPage />} />
+        <Route path="services/:serviceId" element={<ServiceDetailPage />} />
         <Route path="schedule" element={<SchedulePage />} />
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="manifests" element={<ManifestsPage />} />
+        <Route path="technicians" element={<TechniciansPage />} />
       </Route>
     </Routes>
   );

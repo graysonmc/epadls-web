@@ -65,6 +65,7 @@ router.post('/', async (req, res, next) => {
       time_constraint,
       priority,
       notes,
+      office_notes,
       manifest_county,
     } = req.body;
 
@@ -83,6 +84,7 @@ router.post('/', async (req, res, next) => {
         time_constraint,
         priority: priority || 0,
         notes,
+        office_notes,
         manifest_county,
         is_active: true,
       })
@@ -113,6 +115,7 @@ router.put('/:id', async (req, res, next) => {
       time_constraint,
       priority,
       notes,
+      office_notes,
       manifest_county,
       is_active,
     } = req.body;
@@ -128,6 +131,7 @@ router.put('/:id', async (req, res, next) => {
         time_constraint,
         priority,
         notes,
+        office_notes,
         manifest_county,
         is_active,
       })
@@ -141,6 +145,39 @@ router.put('/:id', async (req, res, next) => {
     if (error) throw new AppError(error.message);
 
     res.json(data);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/services/:id/history
+router.get('/:id/history', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { limit = 20, offset = 0 } = req.query;
+
+    // Get total count
+    const { count } = await supabase
+      .from('service_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('recurring_service_id', id);
+
+    // Get paginated events
+    const { data, error } = await supabase
+      .from('service_events')
+      .select('*')
+      .eq('recurring_service_id', id)
+      .order('event_date', { ascending: false })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    if (error) throw new AppError(error.message);
+
+    res.json({
+      events: data,
+      total: count || 0,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
   } catch (error) {
     next(error);
   }

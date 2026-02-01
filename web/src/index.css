@@ -177,6 +177,11 @@ input:focus, select:focus, textarea:focus {
   gap: 8px;
 }
 
+.toolbar .search-input {
+  min-width: 250px;
+  padding: 8px 12px;
+}
+
 .toolbar label {
   display: flex;
   align-items: center;

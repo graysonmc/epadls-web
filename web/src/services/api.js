@@ -105,8 +105,9 @@ class ApiClient {
   }
 
   // Recurring Services
-  async getServices(active = true) {
-    return this.request(`/api/services?active=${active}`);
+  async getServices(active = null) {
+    const params = active !== null ? `?active=${active}` : '';
+    return this.request(`/api/services${params}`);
   }
 
   async getService(id) {
@@ -129,6 +130,18 @@ class ApiClient {
 
   async deleteService(id) {
     return this.request(`/api/services/${id}`, { method: 'DELETE' });
+  }
+
+  async getServiceHistory(id, limit = 20, offset = 0) {
+    return this.request(`/api/services/${id}/history?limit=${limit}&offset=${offset}`);
+  }
+
+  async getJobSiteServices(id) {
+    return this.request(`/api/job-sites/${id}/services`);
+  }
+
+  async getJobSiteHistory(id, limit = 20, offset = 0) {
+    return this.request(`/api/job-sites/${id}/history?limit=${limit}&offset=${offset}`);
   }
 
   // Schedule
@@ -179,6 +192,33 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ services }),
     });
+  }
+
+  // Technicians
+  async getTechnicians() {
+    return this.request('/api/technicians');
+  }
+
+  async getTechnician(id) {
+    return this.request(`/api/technicians/${id}`);
+  }
+
+  async createTechnician(data) {
+    return this.request('/api/technicians', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateTechnician(id, data) {
+    return this.request(`/api/technicians/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteTechnician(id) {
+    return this.request(`/api/technicians/${id}`, { method: 'DELETE' });
   }
 
   // Health check

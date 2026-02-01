@@ -9,5 +9,5 @@ export const config = {
     serviceKey: process.env.SUPABASE_SERVICE_KEY,
     jwtSecret: process.env.SUPABASE_JWT_SECRET,
   },
-  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
+  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:5174'],
 };

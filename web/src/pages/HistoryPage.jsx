@@ -8,6 +8,7 @@ function HistoryPage() {
     eventType: '',
     limit: 100,
   });
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadHistory();
@@ -43,6 +44,16 @@ function HistoryPage() {
     return classes[type] || '';
   };
 
+  const filteredHistory = history.filter(event => {
+    if (!search) return true;
+    const searchLower = search.toLowerCase();
+    return (
+      event.recurring_service?.job_site?.name?.toLowerCase().includes(searchLower) ||
+      event.recurring_service?.service_type?.toLowerCase().includes(searchLower) ||
+      event.performed_by?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="history-page">
       <div className="page-header">
@@ -51,6 +62,13 @@ function HistoryPage() {
       </div>
 
       <div className="toolbar">
+        <input
+          type="text"
+          placeholder="Search by job site, service type, user..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search-input"
+        />
         <select
           value={filters.eventType}
           onChange={(e) => setFilters({ ...filters, eventType: e.target.value })}
@@ -87,7 +105,7 @@ function HistoryPage() {
             </tr>
           </thead>
           <tbody>
-            {history.map(event => (
+            {filteredHistory.map(event => (
               <tr key={event.id}>
                 <td>{new Date(event.event_date).toLocaleDateString()}</td>
                 <td>{event.recurring_service?.job_site?.name || 'N/A'}</td>
@@ -105,9 +123,11 @@ function HistoryPage() {
                 <td>{event.notes || '-'}</td>
               </tr>
             ))}
-            {history.length === 0 && (
+            {filteredHistory.length === 0 && (
               <tr>
-                <td colSpan="7" className="no-data">No history found</td>
+                <td colSpan="7" className="no-data">
+                  {search ? 'No history matches your search' : 'No history found'}
+                </td>
               </tr>
             )}
           </tbody>

@@ -1,10 +1,36 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import AddServiceModal from '../components/services/AddServiceModal';
 
 function ServicesPage() {
+  const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInactive, setShowInactive] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const handleRowClick = (serviceId) => {
+    navigate(`/services/${serviceId}`);
+  };
+
+  const handleAddSuccess = (newService) => {
+    // Navigate to the new service detail page
+    navigate(`/services/${newService.id}`);
+  };
+
+  const filteredServices = services.filter(service => {
+    if (!search) return true;
+    const searchLower = search.toLowerCase();
+    return (
+      service.job_site?.name?.toLowerCase().includes(searchLower) ||
+      service.job_site?.address?.toLowerCase().includes(searchLower) ||
+      service.job_site?.city?.toLowerCase().includes(searchLower) ||
+      service.service_type?.toLowerCase().includes(searchLower) ||
+      service.frequency?.toLowerCase().includes(searchLower)
+    );
+  });
 
   useEffect(() => {
     loadServices();
@@ -13,7 +39,7 @@ function ServicesPage() {
   const loadServices = async () => {
     try {
       setLoading(true);
-      const data = await api.getServices(!showInactive);
+      const data = await api.getServices(showInactive ? false : null);
       setServices(data);
     } catch (error) {
       console.error('Failed to load services:', error);
@@ -30,15 +56,22 @@ function ServicesPage() {
       </div>
 
       <div className="toolbar">
+        <input
+          type="text"
+          placeholder="Search by job site, service type..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search-input"
+        />
         <label className="toggle-label">
           <input
             type="checkbox"
             checked={showInactive}
             onChange={(e) => setShowInactive(e.target.checked)}
           />
-          Show inactive
+          Only inactive
         </label>
-        <button className="btn-primary">Add New Service</button>
+        <button className="btn-primary" onClick={() => setShowAddModal(true)}>Add New Service</button>
       </div>
 
       {loading ? (
@@ -47,6 +80,7 @@ function ServicesPage() {
         <table className="data-table">
           <thead>
             <tr>
+              <th>Service ID</th>
               <th>Job Site</th>
               <th>Service Type</th>
               <th>Frequency</th>
@@ -57,8 +91,14 @@ function ServicesPage() {
             </tr>
           </thead>
           <tbody>
-            {services.map(service => (
-              <tr key={service.id} className={!service.is_active ? 'inactive' : ''}>
+            {filteredServices.map(service => (
+              <tr
+                key={service.id}
+                className={`clickable ${!service.is_active ? 'inactive' : ''}`}
+                onClick={() => handleRowClick(service.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <td>{service.service_id}</td>
                 <td>{service.job_site?.name || 'N/A'}</td>
                 <td>{service.service_type}</td>
                 <td>{service.frequency}</td>
@@ -69,22 +109,25 @@ function ServicesPage() {
                     {service.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
-                <td>
-                  <button className="btn-sm">Edit</button>
-                  <button className="btn-sm btn-danger">
-                    {service.is_active ? 'Deactivate' : 'Activate'}
-                  </button>
-                </td>
+                <td>→</td>
               </tr>
             ))}
-            {services.length === 0 && (
+            {filteredServices.length === 0 && (
               <tr>
-                <td colSpan="7" className="no-data">No services found</td>
+                <td colSpan="8" className="no-data">
+                  {search ? 'No services match your search' : 'No services found'}
+                </td>
               </tr>
             )}
           </tbody>
         </table>
       )}
+
+      <AddServiceModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={handleAddSuccess}
+      />
     </div>
   );
 }

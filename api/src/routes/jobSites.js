@@ -111,6 +111,84 @@ router.put('/:id', async (req, res, next) => {
   }
 });
 
+// GET /api/job-sites/:id/services
+router.get('/:id/services', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from('recurring_services')
+      .select('*')
+      .eq('job_site_id', id)
+      .order('service_type');
+
+    if (error) throw new AppError(error.message);
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/job-sites/:id/history
+router.get('/:id/history', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { limit = 20, offset = 0 } = req.query;
+
+    // Get all service IDs for this job site
+    const { data: services, error: servicesError } = await supabase
+      .from('recurring_services')
+      .select('id, service_type')
+      .eq('job_site_id', id);
+
+    if (servicesError) throw new AppError(servicesError.message);
+
+    if (!services || services.length === 0) {
+      return res.json({
+        events: [],
+        total: 0,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+    }
+
+    const serviceIds = services.map(s => s.id);
+    const serviceTypeMap = Object.fromEntries(services.map(s => [s.id, s.service_type]));
+
+    // Get total count
+    const { count } = await supabase
+      .from('service_events')
+      .select('*', { count: 'exact', head: true })
+      .in('recurring_service_id', serviceIds);
+
+    // Get paginated events
+    const { data: events, error: eventsError } = await supabase
+      .from('service_events')
+      .select('*')
+      .in('recurring_service_id', serviceIds)
+      .order('event_date', { ascending: false })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    if (eventsError) throw new AppError(eventsError.message);
+
+    // Add service_type to each event
+    const eventsWithType = events.map(e => ({
+      ...e,
+      service_type: serviceTypeMap[e.recurring_service_id],
+    }));
+
+    res.json({
+      events: eventsWithType,
+      total: count || 0,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // DELETE /api/job-sites/:id
 router.delete('/:id', async (req, res, next) => {
   try {
